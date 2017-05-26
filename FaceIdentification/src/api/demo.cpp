@@ -11,7 +11,21 @@ using namespace std;
 using namespace seeta;
 using namespace cv;
 
+float* gallery_fea = NULL;
+float* probe_fea = NULL;
+
+ImageData gallery_src_data_color;
+ImageData gallery_src_data_gray;
+ImageData gallery_dst_data_color;
+ImageData gallery_dst_data_gray;
+
 int Get_Image_Data(char *img, ImageData* img_color,ImageData* img_gray);
+static void Face_Rec_Extract_callback1(int state,int FaceNum,float* img_fea);
+static void Face_Rec_Extract_callback2(int state,int FaceNum,float* img_fea);
+static void Face_Rec_Extract_callback3(int state,int FaceNum,std::vector<seeta::FaceInfo> face);
+static void Face_Rec_Extract_callback4(int state,int FaceNum,std::vector<seeta::FaceInfo> face);
+
+
 
 int Get_Image_Data(char *img, ImageData* img_color,ImageData* img_gray)
 {
@@ -30,17 +44,56 @@ int Get_Image_Data(char *img, ImageData* img_color,ImageData* img_gray)
     img_gray->num_channels = gallery_img_gray.channels();
 }
 
+void Face_Rec_Extract_callback1(int state,int FaceNum,float* img_fea)
+{
+	if((state==0)&&(img_fea==gallery_fea))
+	{
+		std::cout << "picture 1 face num is:"<<FaceNum <<endl;
+		Face_Rec_Extract(3,gallery_dst_data_color,gallery_dst_data_gray,probe_fea,Face_Rec_Extract_callback2);
+	}	
+}
+void Face_Rec_Extract_callback2(int state,int FaceNum,float* img_fea)
+{
+	if((state==0)&&(img_fea==probe_fea))
+	{
+		std::cout << "picture 2 face num is:"<<FaceNum <<endl;
+		//calc
+		float sim = Face_Rec_Compare(gallery_fea,probe_fea);
+		std::cout <<"sim111"<< sim <<endl;
+		Face_Rec_Detect(2,gallery_src_data_color,gallery_src_data_gray,Face_Rec_Extract_callback3);
+	}	
+}
+void Face_Rec_Extract_callback3(int state,int FaceNum,std::vector<seeta::FaceInfo> face)
+{
+	if(state==0)
+	{
+	    vector<seeta::FaceInfo>::iterator it=face.begin();
+        
+		std::cout << "picture 3 face num is:"<<(*it).score<<endl;
+		Face_Rec_Detect(2,gallery_dst_data_color,gallery_dst_data_gray,Face_Rec_Extract_callback4);
+	}	
+}
+void Face_Rec_Extract_callback4(int state,int FaceNum,std::vector<seeta::FaceInfo> face)
+{
+	if(state==0)
+	{
+	    vector<seeta::FaceInfo>::iterator it=face.begin();
+        
+		std::cout << "picture 4 face num is:"<<(*it).score<<endl;
+        
+		free(gallery_fea);
+		free(probe_fea);
+		gallery_fea=NULL;
+		probe_fea=NULL;
+		Face_Rec_Deinit();		
+	}	
+}
 int main(int argc, char *argv[]) 
 {
 	 char* srcImg=argv[1];
      char* dstImg=argv[2];
 	 
-	Face_Rec_Init();
-
-	ImageData gallery_src_data_color;
-	ImageData gallery_src_data_gray;
-	ImageData gallery_dst_data_color;
-	ImageData gallery_dst_data_gray;
+	Face_Rec_Init(5);
 
 	cv::Mat gallery_img_color = cv::imread(srcImg, 1);
 	cv::Mat gallery_img_gray;
@@ -72,20 +125,15 @@ int main(int argc, char *argv[])
 
 
 	//detect
-	float* gallery_fea = (float*)malloc (2048*sizeof(float));
-	float* probe_fea = (float*)malloc (2048*sizeof(float));
+	gallery_fea = (float*)malloc (2048*sizeof(float));
+	probe_fea = (float*)malloc (2048*sizeof(float));
 
 
-	Face_Rec_Extract(gallery_src_data_color,gallery_src_data_gray,gallery_fea);
-	Face_Rec_Extract(gallery_dst_data_color,gallery_dst_data_gray,probe_fea);	 
-
-	//calc
-
-
-	float sim = Face_Rec_Compare(gallery_fea,probe_fea);
-	std::cout << sim <<endl;
-	free(gallery_fea);
-	free(probe_fea);
-
-	Face_Rec_Deinit();
+	Face_Rec_Extract(3,gallery_src_data_color,gallery_src_data_gray,gallery_fea,Face_Rec_Extract_callback1);
+	
+	while(1)
+	{
+		;
+	}
+	return 0;
 }
