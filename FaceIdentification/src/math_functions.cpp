@@ -30,11 +30,12 @@
  */
 
 #include "math_functions.h"
+#include <cstdint>
 #include "xmmintrin.h"
 #include "emmintrin.h"
 #include "smmintrin.h"
 #include "nmmintrin.h"
-#include <cstdint>
+
 
 #ifdef _WIN32
 #include <intrin.h>
@@ -45,11 +46,8 @@
 float simd_dot(const float* x, const float* y, const long& len) {
 
   float inner_prod = 0.0f;
-  //#ifdef _WIN32
-  //float op[4] = {0, 0, 0, 0};  
   __m128 X, Y; // 128-bit values
   __m128 acc = _mm_setzero_ps(); // set to (0, 0, 0, 0)
- // __m128 acc = _mm_loadu_ps(op);  
   float temp[4];
 
   long i;
@@ -65,9 +63,7 @@ float simd_dot(const float* x, const float* y, const long& len) {
   for (; i < len; ++i) {
       inner_prod += x[i] * y[i];
   }
-   // #endif
   return inner_prod;
-
 }
 
 void matrix_procuct(const float* A, const float* B, float* C, const int n,

@@ -67,40 +67,9 @@ static int Limit_Count=0;
 
 
 
-int Set_Face_Rec_Flag(int ChanNum,int opera);
-
-static float simd(const float* x, const float* y, const long& len) {
-
-  float inner_prod = 0.0f;
-  //#ifdef _WIN32
-  //float op[4] = {0, 0, 0, 0};  
-  __m128 X, Y; // 128-bit values
-  __m128 acc = _mm_setzero_ps(); // set to (0, 0, 0, 0)
- // __m128 acc = _mm_loadu_ps(op);  
-  float temp[4];
-
-  long i;
-  for (i = 0; i + 4 < len; i += 4) {
-      X = _mm_loadu_ps(x + i); // load chunk of 4 floats
-      Y = _mm_loadu_ps(y + i);
-      acc = _mm_add_ps(acc, _mm_mul_ps(X, Y));
-  }
-  _mm_storeu_ps(&temp[0], acc); // store acc into an array
-  inner_prod = temp[0] + temp[1] + temp[2] + temp[3];
-
-  // add the remaining values
-  for (; i < len; ++i) {
-      inner_prod += x[i] * y[i];
-  }
-   // #endif
-  return inner_prod;
-
-}
-
-
 static void *timer_thread(void *arg)
 {
-//  PRINT_INFO("%s - is called enter .....\n",__FUNCTION__);
+
     Face_Rec_Step_EM steps=FACE_REC_STEP_INIT; 
     int state=0;
     ImageData imgdata_color;
@@ -137,11 +106,10 @@ static void *timer_thread(void *arg)
             int32_t gallery_face_num = static_cast<int32_t>(gallery_faces.size());
             if (gallery_face_num == 0)
             {
-            	//std::cout << "Faces are not detected."<<endl;
             	state=-1;
-            }	
-
-            if(steps==FACE_REC_STEP_EXTR)
+            }
+            
+            if(steps==FACE_REC_STEP_EXTR && gallery_face_num >0)
             {
                 // Detect 5 facial landmarks
                 seeta::FacialLandmark gallery_points[5];
@@ -172,13 +140,18 @@ static void *timer_thread(void *arg)
             Face_Rec_Imp_Count++;
         pthread_mutex_unlock(&mutex);
         
-        sleep(1);
+        usleep(50000);
     }
     return NULL;
 }
 
 
-    
+//Function: Initialize the face detection/recognize module
+//Param : 
+//  ChannelNum: the max of thread
+//  path: ANN binary path (can be omitted)
+//Return Value:
+//  0: Noraml, -1: Thread Create Failed, -2: Thread Number exceed the max of thread
 int Face_Rec_Init(int ChannelNum,char *path)
 {
     if(thread_run == 0) {
@@ -228,8 +201,7 @@ int Face_Rec_Init(int ChannelNum,char *path)
           return -1;
         }
     }    
-	
-	
+
     pthread_mutex_lock(&mutex);
     memset(MAIN_ST,0,sizeof(MAIN_ST));
     if(ChannelNum>Face_Rec_Pthread_MAX_NUM)
@@ -242,6 +214,16 @@ int Face_Rec_Init(int ChannelNum,char *path)
     return 0;
 }
 
+
+//Function: Recognize face from picture
+//Param : 
+//  ChannelID: ID of the thread,
+//  img_data_color: Original Image,
+//  img_data_gray: Gray Image,
+//  callback_function: Callback when complete detect
+
+//Return Value:
+//  0: Noraml, -1: Module Busy, -2: Thread Number exceed the max of thread
 int Face_Rec_Extract(int ChannelID,ImageData img_data_color,ImageData img_data_gray,float* img_fea,Face_Rec_Extract_cb_t callback_function)
 {
     int ret=0;
@@ -267,7 +249,14 @@ int Face_Rec_Extract(int ChannelID,ImageData img_data_color,ImageData img_data_g
     return ret;
 }
 
-
+//Function: Detect face from picture
+//Param : 
+//  ChannelID: ID of the thread,
+//  img_data_color: Original Image,
+//  img_data_gray: Gray Image,
+//  callback_function: Callback when complete detect
+//Return Value:
+//  0: Noraml, -1: Module Busy, -2: Thread Number exceed the max of thread
 int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gray,Face_Rec_Detect_cb_t callback_function)
 {
     int ret=0;
@@ -288,7 +277,12 @@ int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gr
 }
 
 
-
+//Function: Compare two face feature value
+//Param : 
+//  img1_fea: image 1 feature value
+//  img2_fea: image 2 feature value
+//Return Value:
+//  simularity of two faces
 float Face_Rec_Compare(float * img1_fea,float * img2_fea)
 {
     long dim=2048;
@@ -297,6 +291,11 @@ float Face_Rec_Compare(float * img1_fea,float * img2_fea)
     * sqrt(simd(img2_fea, img2_fea, dim))); 
 }
 
+
+//Function: Deinitialize the face detection/recognize module
+//Param : 
+//Return Value:
+//  0: Noraml
 int Face_Rec_Deinit()
 {
     pthread_mutex_lock(&mutex);

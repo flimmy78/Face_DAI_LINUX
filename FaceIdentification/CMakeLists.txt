@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 
-project (viplnet)
+project (facev_lib)
 
 set (VIPLNET_VERSION_MAJOR 4)
 set (VIPLNET_VERSION_MINOR 5)
@@ -18,6 +18,9 @@ endif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 
 set(VIPLNET_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(VIPLNET_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
+
+
+
 # set __VIOL_LOG__ macro
 # add_definitions(-D__VIPL_LOG__)
 
@@ -28,7 +31,7 @@ add_subdirectory(src)
 
 aux_source_directory(./src SRC_LIST)
 aux_source_directory(./tools TOOLS_LIST)
-add_library(viplnet SHARED ${SRC_LIST} ${TOOLS_LIST})
-set_target_properties(viplnet PROPERTIES 
+add_library(facev_lib SHARED ${SRC_LIST} ${TOOLS_LIST})
+set_target_properties(facev_lib PROPERTIES 
   VERSION ${VIPLNET_VERSION_MAJOR}.${VIPLNET_VERSION_MINOR} 
   SOVERSION ${VIPLNET_VERSION_MAJOR}.${VIPLNET_VERSION_MINOR}) 

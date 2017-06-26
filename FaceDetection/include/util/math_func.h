@@ -32,11 +32,13 @@
 #ifndef SEETA_FD_UTIL_MATH_FUNC_H_
 #define SEETA_FD_UTIL_MATH_FUNC_H_
 
+#include <cstdint>
+
 #ifdef USE_SSE
 #include <immintrin.h>
 #endif
 
-#include <cstdint>
+
 
 namespace seeta {
 namespace fd {
@@ -97,7 +99,7 @@ class MathFunction {
   }
 
   static inline void VectorAbs(const int32_t* src, int32_t* dest, int32_t len) {
-    int32_t i;
+  int32_t i;
 #ifdef USE_SSE
     __m128i val;
     __m128i val_abs;
