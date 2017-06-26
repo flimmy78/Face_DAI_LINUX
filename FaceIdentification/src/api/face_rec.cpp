@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
-
+#include "math_functions.h"
 
 #define TEST(major, minor) major##_##minor##_Tester()
 #define EXPECT_NE(a, b) if ((a) == (b)) std::cout << "ERROR: "
@@ -27,14 +27,6 @@ static int thread_run = 0;
 static pthread_mutex_t mutex;
 static pthread_cond_t cond;
 
-typedef enum { /* bitmapped status flags */
-    FACE_REC_STEP_INIT,
-    FACE_REC_STEP_EXTR,
-    FACE_REC_STEP_DECT,    
-    FACE_REC_STEP_COMP,
-    FACE_REC_STEP_OVER
-} Face_Rec_Step_EM;
-
 struct Face_Rec_Imp_ST{
 	int ChannelNum;
 	ImageData img_data_color;
@@ -53,7 +45,7 @@ struct Face_Rec_Imp_ST{
 		img_fea_para2=NULL;
 		callback_function1=NULL;
         callback_function2=NULL;	
-		Step=FACE_REC_STEP_INIT;	
+		Step=FACE_REC_STEP_IDLE;	
 	}  
 };
 
@@ -65,12 +57,39 @@ static Face_Rec_Imp_ST MAIN_ST[Face_Rec_Pthread_MAX_NUM];
 static int Face_Rec_ACT_NUM=0;
 static int Limit_Count=0;
 
+static float simd(const float* x, const float* y, const long& len) {
+
+  float inner_prod = 0.0f;
+  //#ifdef _WIN32
+  //float op[4] = {0, 0, 0, 0};  
+  __m128 X, Y; // 128-bit values
+  __m128 acc = _mm_setzero_ps(); // set to (0, 0, 0, 0)
+ // __m128 acc = _mm_loadu_ps(op);  
+  float temp[4];
+
+  long i;
+  for (i = 0; i + 4 < len; i += 4) {
+      X = _mm_loadu_ps(x + i); // load chunk of 4 floats
+      Y = _mm_loadu_ps(y + i);
+      acc = _mm_add_ps(acc, _mm_mul_ps(X, Y));
+  }
+  _mm_storeu_ps(&temp[0], acc); // store acc into an array
+  inner_prod = temp[0] + temp[1] + temp[2] + temp[3];
+
+  // add the remaining values
+  for (; i < len; ++i) {
+      inner_prod += x[i] * y[i];
+  }
+   // #endif
+  return inner_prod;
+
+}
 
 
 static void *timer_thread(void *arg)
 {
 
-    Face_Rec_Step_EM steps=FACE_REC_STEP_INIT; 
+    Face_Rec_Step_EM steps=FACE_REC_STEP_IDLE; 
     int state=0;
     ImageData imgdata_color;
     ImageData imgdata_gray;
@@ -119,7 +138,7 @@ static void *timer_thread(void *arg)
             }
 			
 			pthread_mutex_lock(&mutex);
-			MAIN_ST[Face_Rec_Imp_Count].Step=FACE_REC_STEP_OVER;
+			MAIN_ST[Face_Rec_Imp_Count].Step=FACE_REC_STEP_IDLE;
 			pthread_mutex_unlock(&mutex);
 
             if((callback_func1!=NULL)&&(steps==FACE_REC_STEP_EXTR))
@@ -130,7 +149,7 @@ static void *timer_thread(void *arg)
             {
                 callback_func2(state,gallery_face_num,gallery_faces);
             }
-            steps=FACE_REC_STEP_OVER;
+            steps=FACE_REC_STEP_IDLE;
         }
 
         pthread_mutex_lock(&mutex);
@@ -314,3 +333,14 @@ int Face_Rec_Deinit()
 	face_recognizer=NULL;
 }
 
+Face_Rec_Step_EM Face_Rec_Current_Step(int ChannelID)
+{
+	Face_Rec_Step_EM steps=FACE_REC_STEP_IDLE;
+	pthread_mutex_lock(&mutex);
+    if(ChannelID<Face_Rec_ACT_NUM)
+    {
+		steps=MAIN_ST[ChannelID].Step;
+	}	
+    pthread_mutex_unlock(&mutex);
+	return steps;
+}

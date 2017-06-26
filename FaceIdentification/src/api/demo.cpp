@@ -25,19 +25,12 @@ static void Face_Rec_Extract_callback2(int state,int FaceNum,float* img_fea);
 static void Face_Rec_Extract_callback3(int state,int FaceNum,std::vector<seeta::FaceInfo> face);
 static void Face_Rec_Extract_callback4(int state,int FaceNum,std::vector<seeta::FaceInfo> face);
 
-static bool step1_done_flag=0;
-static bool step2_done_flag=0;
-static bool step3_done_flag=0;
-static bool step4_done_flag=0;
-
-
 void Face_Rec_Extract_callback1(int state,int FaceNum,float* img_fea)
 {
 	if((state==0)&&(img_fea==gallery_fea))
 	{
 		std::cout << "picture 1 face num is:"<<FaceNum <<endl;
 	}
-	step1_done_flag=1;	
 }
 void Face_Rec_Extract_callback2(int state,int FaceNum,float* img_fea)
 {
@@ -45,32 +38,29 @@ void Face_Rec_Extract_callback2(int state,int FaceNum,float* img_fea)
 	{
 		std::cout << "picture 2 face num is:"<<FaceNum <<endl;
 	}
-	step2_done_flag=1;	
 }
 void Face_Rec_Extract_callback3(int state,int FaceNum,std::vector<seeta::FaceInfo> face)
 {
 	if(state==0)
 	{
 		vector<seeta::FaceInfo>::iterator it=face.begin();
-		std::cout << "picture 1 score is: "<<(*it).score<<endl;
+		std::cout << "picture 1 detct score is: "<<(*it).score<<endl;
 	}
-	step3_done_flag=1;	
 }
 void Face_Rec_Extract_callback4(int state,int FaceNum,std::vector<seeta::FaceInfo> face)
 {
 	if(state==0)
 	{
 		vector<seeta::FaceInfo>::iterator it=face.begin();
-		std::cout << "picture 2 score is:"<<(*it).score<<endl;		
+		std::cout << "picture 2 detect score is:"<<(*it).score<<endl;		
 	}	
-	step4_done_flag=1;
 }
 int main(int argc, char *argv[]) 
 {
 	char* srcImg=argv[1];
 	char* dstImg=argv[2];
 
-	Face_Rec_Init(5);
+	Face_Rec_Init(4);
 
 	cv::Mat gallery_img_color = cv::imread(srcImg, 1);
 	cv::Mat gallery_img_gray;
@@ -111,28 +101,25 @@ int main(int argc, char *argv[])
 
 	while(1)
 	{
-		if((step1_done_flag==1)&&(step2_done_flag==1))
+		if((Face_Rec_Current_Step(1)==FACE_REC_STEP_IDLE)
+		&&(Face_Rec_Current_Step(2)==FACE_REC_STEP_IDLE)
+		&&(Face_Rec_Current_Step(3)==FACE_REC_STEP_IDLE)
+		&&(Face_Rec_Current_Step(4)==FACE_REC_STEP_IDLE))
 		{
-			step1_done_flag=0;
-			step2_done_flag=0;
-			//calc
-			float sim = Face_Rec_Compare(gallery_fea,probe_fea);
-			std::cout <<"sim of two face is:"<< sim <<endl;
-			delete(gallery_fea);
-			delete(probe_fea);
-			gallery_fea=NULL;
-			probe_fea=NULL;
-		}
-
-		if((step3_done_flag==1)&&(step4_done_flag==1)&&(gallery_fea==NULL)&&(probe_fea==NULL))
-		{
-			step3_done_flag=0;
-			step4_done_flag=0;
-			std::cout << "two picture detect successfully"<<endl;
-			std::cout << "demo is over!!!"<<endl;
-			Face_Rec_Deinit();
 			break;
 		}
 	}
+	
+	//Caculate Sim
+	float sim = Face_Rec_Compare(gallery_fea,probe_fea);
+	std::cout <<"sim of two face is:"<< sim <<endl;
+	delete(gallery_fea);
+	delete(probe_fea);
+	gallery_fea=NULL;
+	probe_fea=NULL;	
+
+	Face_Rec_Deinit();	
+	std::cout << "two picture detect successfully"<<endl;
+	std::cout << "demo is over!!!"<<endl;
 	return 0;
 }
