@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <conio.h>
 
 #include "opencv2/core/version.hpp"
 #include "opencv/cv.h"
@@ -120,6 +121,8 @@ int main(int argc, char *argv[])
 
 	Face_Rec_Deinit();	
 	std::cout << "two picture detect successfully"<<endl;
-	std::cout << "demo is over!!!"<<endl;
+	std::cout << "demo is over, press any key to exit!!!"<<endl;
+	
+	getch();
 	return 0;
 }

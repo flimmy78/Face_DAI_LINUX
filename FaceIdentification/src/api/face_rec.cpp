@@ -55,7 +55,6 @@ static FaceIdentification *face_recognizer=NULL;
 //std::string test_dir = DATA_DIR + "test_face_recognizer/";	
 static Face_Rec_Imp_ST MAIN_ST[Face_Rec_Pthread_MAX_NUM];
 static int Face_Rec_ACT_NUM=0;
-static int Limit_Count=0;
 
 static float simd(const float* x, const float* y, const long& len) {
 
@@ -246,11 +245,6 @@ int Face_Rec_Init(int ChannelNum,char *path)
 int Face_Rec_Extract(int ChannelID,ImageData img_data_color,ImageData img_data_gray,float* img_fea,Face_Rec_Extract_cb_t callback_function)
 {
     int ret=0;
-	if(Limit_Count>100)
-		return -1;
-	else
-		Limit_Count++;	
-	
     pthread_mutex_lock(&mutex);
     if(ChannelID>=Face_Rec_ACT_NUM)
         ret=-2;
