@@ -45,7 +45,7 @@ void Face_Rec_Extract_callback3(int state,int FaceNum,std::vector<seeta::FaceInf
 	if(state==0)
 	{
 		vector<seeta::FaceInfo>::iterator it=face.begin();
-		std::cout << "picture 1 detct score is: "<<(*it).score<<endl;
+		//std::cout << "picture 1 detct score is: "<<(*it).score<<endl;
 	}
 }
 void Face_Rec_Extract_callback4(int state,int FaceNum,std::vector<seeta::FaceInfo> face)
@@ -53,7 +53,7 @@ void Face_Rec_Extract_callback4(int state,int FaceNum,std::vector<seeta::FaceInf
 	if(state==0)
 	{
 		vector<seeta::FaceInfo>::iterator it=face.begin();
-		std::cout << "picture 2 detect score is:"<<(*it).score<<endl;		
+		//std::cout << "picture 2 detect score is:"<<(*it).score<<endl;		
 	}	
 }
 int main(int argc, char *argv[]) 
