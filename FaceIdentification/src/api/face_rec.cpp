@@ -148,17 +148,18 @@ static void *timer_thread(void *arg)
             {
                 callback_func2(state,gallery_face_num,gallery_faces);
             }
+            state=0;
             steps=FACE_REC_STEP_IDLE;
         }
 
         pthread_mutex_lock(&mutex);
-        if(Face_Rec_Imp_Count>=Face_Rec_ACT_NUM)
+        if(Face_Rec_Imp_Count>=(Face_Rec_ACT_NUM-1))
             Face_Rec_Imp_Count=0;
         else
             Face_Rec_Imp_Count++;
         pthread_mutex_unlock(&mutex);
         
-        usleep(50000);
+        usleep(10000);
     }
     return NULL;
 }
@@ -172,6 +173,8 @@ static void *timer_thread(void *arg)
 //  0: Noraml, -1: Thread Create Failed, -2: Thread Number exceed the max of thread
 int Face_Rec_Init(int ChannelNum,char *path)
 {
+    pthread_attr_t      attr;
+    struct sched_param  param;
     if(thread_run == 0) {
         pthread_mutex_init(&mutex, NULL);
         pthread_cond_init(&cond, NULL);
@@ -212,8 +215,14 @@ int Face_Rec_Init(int ChannelNum,char *path)
         {
             face_recognizer=new FaceIdentification((char *)recognizer_path.c_str());
         }
-       
-        if(pthread_create(&thread, NULL, timer_thread, NULL) != 0) {
+
+    	pthread_attr_init(&attr);
+    	pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
+    	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+    	pthread_attr_setschedparam(&attr, &param);
+    	pthread_attr_getschedparam(&attr, &param);
+	
+        if(pthread_create(&thread, &attr, timer_thread, NULL) != 0) {
           std::cout << "Thread creation failed"<<endl;
           thread_run = 0;
           return -1;

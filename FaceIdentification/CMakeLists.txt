@@ -32,6 +32,6 @@ add_subdirectory(src)
 aux_source_directory(./src SRC_LIST)
 aux_source_directory(./tools TOOLS_LIST)
 add_library(facev_lib SHARED ${SRC_LIST} ${TOOLS_LIST})
-set_target_properties(facev_lib PROPERTIES 
-  VERSION ${VIPLNET_VERSION_MAJOR}.${VIPLNET_VERSION_MINOR} 
-  SOVERSION ${VIPLNET_VERSION_MAJOR}.${VIPLNET_VERSION_MINOR}) 
+#set_target_properties(facev_lib PROPERTIES 
+#  VERSION ${VIPLNET_VERSION_MAJOR}.${VIPLNET_VERSION_MINOR} 
+#  SOVERSION ${VIPLNET_VERSION_MAJOR}.${VIPLNET_VERSION_MINOR}) 
