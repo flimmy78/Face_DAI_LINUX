@@ -68,6 +68,7 @@ void Face_Rec_Extract_callback4(int state,int FaceNum,std::vector<seeta::FaceInf
 		std::cout << "Face_Rec_Extract_callback4:"<<state <<endl;
 	}
 }
+
 int main(int argc, char *argv[]) 
 {
 	char* srcImg=argv[1];
