@@ -12,7 +12,7 @@ using namespace seeta;
 #define Face_Rec_Pthread_MAX_NUM    64
 
 typedef void(*Face_Rec_Extract_cb_t)(int state,int FaceNum,float* img_fea);
-typedef void(*Face_Rec_Detect_cb_t)(int state,int FaceNum,std::vector<seeta::FaceInfo> face_info);
+typedef void(*Face_Rec_Detect_cb_t)(int state,int FaceNum,void * face_data);
 typedef enum { /* bitmapped status flags */
     FACE_REC_STEP_IDLE,
     FACE_REC_STEP_EXTR,

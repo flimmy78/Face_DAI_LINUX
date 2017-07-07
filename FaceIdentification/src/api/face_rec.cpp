@@ -98,7 +98,8 @@ static void *timer_thread(void *arg)
     Face_Rec_Extract_cb_t callback_func1=NULL;
     Face_Rec_Detect_cb_t callback_func2=NULL;
     int Face_Rec_Imp_Count=0;
-
+	std::vector<seeta::FaceInfo> gallery_faces;
+	
     while(thread_run) {
         pthread_mutex_lock(&mutex);
         if(MAIN_ST[Face_Rec_Imp_Count].Step==FACE_REC_STEP_EXTR) 
@@ -120,7 +121,7 @@ static void *timer_thread(void *arg)
         	
         if((steps==FACE_REC_STEP_EXTR)||(steps==FACE_REC_STEP_DECT))
         {
-            std::vector<seeta::FaceInfo> gallery_faces = detector->Detect(imgdata_gray);
+            gallery_faces = detector->Detect(imgdata_gray);
             int32_t gallery_face_num = static_cast<int32_t>(gallery_faces.size());
             if (gallery_face_num == 0)
             {
@@ -146,7 +147,7 @@ static void *timer_thread(void *arg)
             }			
             else if((callback_func2!=NULL)&&(steps==FACE_REC_STEP_DECT))
             {
-                callback_func2(state,gallery_face_num,gallery_faces);
+                callback_func2(state,gallery_face_num,(void *)&gallery_faces);
             }
             state=0;
             steps=FACE_REC_STEP_IDLE;

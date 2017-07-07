@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-//#include <conio.h>
+#include <conio.h>
 
 #include "opencv2/core/version.hpp"
 #include "opencv/cv.h"
@@ -23,8 +23,8 @@ ImageData gallery_dst_data_gray;
 
 static void Face_Rec_Extract_callback1(int state,int FaceNum,float* img_fea);
 static void Face_Rec_Extract_callback2(int state,int FaceNum,float* img_fea);
-static void Face_Rec_Extract_callback3(int state,int FaceNum,std::vector<seeta::FaceInfo> face);
-static void Face_Rec_Extract_callback4(int state,int FaceNum,std::vector<seeta::FaceInfo> face);
+static void Face_Rec_Extract_callback3(int state,int FaceNum,void *face_data);
+static void Face_Rec_Extract_callback4(int state,int FaceNum,void *face_data);
 
 void Face_Rec_Extract_callback1(int state,int FaceNum,float* img_fea)
 {
@@ -48,22 +48,23 @@ void Face_Rec_Extract_callback2(int state,int FaceNum,float* img_fea)
 		std::cout << "No face for Picture 2" <<endl;
 	}
 }
-void Face_Rec_Extract_callback3(int state,int FaceNum,std::vector<seeta::FaceInfo> face)
+void Face_Rec_Extract_callback3(int state,int FaceNum,void *face_data)
 {
+	std::vector<FaceInfo>& result = *(std::vector<FaceInfo>*)face_data;
 	if(state==0)
 	{
-		vector<seeta::FaceInfo>::iterator it=face.begin();
-		std::cout << "picture 1 detect faces:"<<FaceNum<<endl;
+		std::cout << "picture 1 detect faces:"<<FaceNum <<"face roll:"<<result[0].roll<< endl;
 	} else {
 		std::cout << "Face_Rec_Extract_callback3:"<<state <<endl;
 	}
 }
-void Face_Rec_Extract_callback4(int state,int FaceNum,std::vector<seeta::FaceInfo> face)
+
+void Face_Rec_Extract_callback4(int state,int FaceNum,void *face_data)
 {
+	std::vector<FaceInfo>& result = *(std::vector<FaceInfo>*)face_data;
 	if(state==0)
 	{
-		vector<seeta::FaceInfo>::iterator it=face.begin();
-		std::cout << "picture 2 detect faces:"<<FaceNum<<endl;
+		std::cout << "picture 1 detect faces:"<<FaceNum <<"face roll:"<<result[0].roll<< endl;
 	} else {
 		std::cout << "Face_Rec_Extract_callback4:"<<state <<endl;
 	}
@@ -137,6 +138,6 @@ int main(int argc, char *argv[])
 	std::cout << "two picture detect successfully"<<endl;
 	std::cout << "demo is over, press any key to exit!!!"<<endl;
 	
-	//getch();
+	getch();
 	return 0;
 }
