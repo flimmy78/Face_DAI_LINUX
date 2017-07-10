@@ -180,7 +180,7 @@ int Face_Rec_Init(int ChannelNum,char *path)
     string detector_path;
     string recognizer_path;   
 
-    if (ChannelNum < 1 || ChannelNum > Face_Rec_Pthread_MAX_NUM) {
+    if ((ChannelNum < 1) || (ChannelNum > Face_Rec_Pthread_MAX_NUM)) {
         cout<<"Init Fail, ChannelNum Should > 0 && < 64";
         return -2;
     }
@@ -225,7 +225,8 @@ int Face_Rec_Init(int ChannelNum,char *path)
       
     if (ChannelNum == 1) {
         Face_Rec_ACT_NUM = ChannelNum;
-        return 1;
+		thread_run=0;
+        return 0;
     }
 
 
@@ -277,13 +278,9 @@ int Face_Rec_Extract(int ChannelID,ImageData img_data_color,ImageData img_data_g
     if(ChannelID>=Face_Rec_ACT_NUM || ChannelID < 0) {
         return -2;
     }
-
-// TODO Param Judge
-//    if (img_data_color == NULL || !img_data_gray == NULL || img_fea == NULL) {
-//        return -4;
-//    }
-
-
+    if((img_data_color.data == NULL)||(img_data_gray.data == NULL)|| (img_fea == NULL)) {
+        return -4;
+    }
 // single thread
     if(Face_Rec_ACT_NUM == 1 && ChannelID == 0) {
         
@@ -330,21 +327,22 @@ int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gr
     if(ChannelID>=Face_Rec_ACT_NUM || ChannelID < 0) {
         return -2;
     }
-
-// TODO Param Judge
-//    if (img_data_color == NULL || !img_data_gray == NULL) {
-//        return -3;
-//    }
-
-
+    if((img_data_color.data == NULL)||(img_data_gray.data == NULL)){
+        return -4;
+    }
 //single thread
 
-    if(Face_Rec_ACT_NUM == 1 && ChannelID == 0) {
-
-        std::vector<seeta::FaceInfo> gallery_faces;
-        gallery_faces = detector->Detect(img_data_gray);
-        //TODO  copy gallery_faces to *res_faces;
-        return 0;
+    if((Face_Rec_ACT_NUM == 1) && (ChannelID == 0)) {
+		std::vector<seeta::FaceInfo> gallery_faces;
+		gallery_faces = detector->Detect(img_data_gray);
+		int32_t gallery_face_num = static_cast<int32_t>(gallery_faces.size());		
+		if(gallery_face_num >0)
+        {
+			std::vector<FaceInfo>& result = *(std::vector<FaceInfo>*)res_faces;
+			result.insert(result.end(),gallery_faces.begin(),gallery_faces.end());
+			return 0;
+		}
+		return -3;
     }
 
 //multi thread

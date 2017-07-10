@@ -112,8 +112,8 @@ int main(int argc, char *argv[])
 	
 	Face_Rec_Extract(0,gallery_src_data_color,gallery_src_data_gray,gallery_fea,Face_Rec_Extract_callback1);
 	Face_Rec_Extract(1,gallery_dst_data_color,gallery_dst_data_gray,probe_fea,Face_Rec_Extract_callback2);	
-	Face_Rec_Detect(2,gallery_src_data_color,gallery_src_data_gray,Face_Rec_Extract_callback3);
-	Face_Rec_Detect(3,gallery_dst_data_color,gallery_dst_data_gray,Face_Rec_Extract_callback4);
+	Face_Rec_Detect(2,gallery_src_data_color,gallery_src_data_gray,NULL,Face_Rec_Extract_callback3);
+	Face_Rec_Detect(3,gallery_dst_data_color,gallery_dst_data_gray,NULL,Face_Rec_Extract_callback4);
 
 	while(1)
 	{

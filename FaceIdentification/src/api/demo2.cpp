@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 {
 	char* srcImg=argv[1];
 	char* dstImg=argv[2];
-
+	std::vector<seeta::FaceInfo> ga_faces;
 	// Image Data Preparation
 
 	cv::Mat gallery_img_color = cv::imread(srcImg, 1);
@@ -66,9 +66,13 @@ int main(int argc, char *argv[])
 	Face_Rec_Init(1);
 	
 	Face_Rec_Extract(0,gallery_src_data_color,gallery_src_data_gray,gallery_fea,NULL);
-	Face_Rec_Extract(0,gallery_dst_data_color,gallery_dst_data_gray,probe_fea,NULL);	
-
-
+	Face_Rec_Extract(0,gallery_dst_data_color,gallery_dst_data_gray,probe_fea,NULL);
+	ga_faces.clear();
+	Face_Rec_Detect(0,gallery_src_data_color,gallery_src_data_gray,(void *)&ga_faces,NULL);
+	std::cout << "picture 1 detect faces:"<<"face num:"<<ga_faces.size()<< endl;
+	ga_faces.clear();
+	Face_Rec_Detect(0,gallery_dst_data_color,gallery_dst_data_gray,(void *)&ga_faces,NULL);
+	std::cout << "picture 2 detect faces:"<<"face num:"<<ga_faces.size()<< endl;	
 	//Caculate Sim
 	float sim = Face_Rec_Compare(gallery_fea,probe_fea);
 	std::cout <<"sim of two face is:"<< sim <<endl;
