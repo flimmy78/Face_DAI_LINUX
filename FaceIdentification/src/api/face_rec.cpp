@@ -54,7 +54,7 @@ static FaceAlignment *point_detector=NULL;
 static FaceIdentification *face_recognizer=NULL;
 //std::string test_dir = DATA_DIR + "test_face_recognizer/";	
 static Face_Rec_Imp_ST MAIN_ST[Face_Rec_Pthread_MAX_NUM];
-static int Face_Rec_ACT_NUM=0;
+static int Face_Rec_ACT_NUM=-1;
 
 static float simd(const float* x, const float* y, const long& len) {
 
@@ -171,51 +171,69 @@ static void *timer_thread(void *arg)
 //  ChannelNum: the max of thread
 //  path: ANN binary path (can be omitted)
 //Return Value:
-//  0: Noraml, -1: Thread Create Failed, -2: Thread Number exceed the max of thread
+//  0: Noraml Multithread,1: Normal Single Thread -1: Thread Create Failed, -2: Thread Number exceed the max of thread, -3: Double Initiate
 int Face_Rec_Init(int ChannelNum,char *path)
 {
     pthread_attr_t      attr;
     struct sched_param  param;
+    string alignment_path;
+    string detector_path;
+    string recognizer_path;   
+
+    if (ChannelNum < 1 || ChannelNum > Face_Rec_Pthread_MAX_NUM) {
+        cout<<"Init Fail, ChannelNum Should > 0 && < 64";
+        return -2;
+    }
+    if ( Face_Rec_ACT_NUM != -1) {
+        cout<<"Double Initiate ";
+        return -3;
+    }
+
+    if(path!=NULL)
+    {
+        alignment_path=path;
+        detector_path=path;
+        recognizer_path=path;
+        alignment_path+="fa.bin";
+        detector_path+="fd.bin";
+        recognizer_path+="fr.bin";  
+    }
+    else
+    {
+        alignment_path="fa.bin";
+        detector_path="fd.bin";
+        recognizer_path="fr.bin";       
+    } 
+
+    if(point_detector==NULL) {
+            point_detector=new FaceAlignment((char *)alignment_path.c_str());
+    }
+    
+    if(detector==NULL) {
+        detector=new FaceDetection((char *)detector_path.c_str());
+        detector->SetMinFaceSize(40);
+        detector->SetScoreThresh(2.f);
+        detector->SetImagePyramidScaleFactor(0.8f);
+        detector->SetWindowStep(4, 4);
+    }
+    
+    if(face_recognizer==NULL) {
+        face_recognizer=new FaceIdentification((char *)recognizer_path.c_str());
+    }
+
+// Single Thread  
+      
+    if (ChannelNum == 1) {
+        Face_Rec_ACT_NUM = ChannelNum;
+        return 1;
+    }
+
+
+// Multi Thread    
     if(thread_run == 0) {
         pthread_mutex_init(&mutex, NULL);
         pthread_cond_init(&cond, NULL);
         thread_run = 1; /* must set to 1 before thread creation */
-
-    	string alignment_path;
-    	string detector_path;
-    	string recognizer_path;		
-    	if(path!=NULL)
-    	{
-    		alignment_path=path;
-    		detector_path=path;
-    		recognizer_path=path;
-    		alignment_path+="fa.bin";
-    		detector_path+="fd.bin";
-    		recognizer_path+="fr.bin";	
-    	}
-    	else
-    	{
-    		alignment_path="fa.bin";
-    		detector_path="fd.bin";
-    		recognizer_path="fr.bin";		
-    	}		
-
-        if(point_detector==NULL)
-        {
-    	    point_detector=new FaceAlignment((char *)alignment_path.c_str());
-        }
-        if(detector==NULL)
-        {
-    	    detector=new FaceDetection((char *)detector_path.c_str());
-        	detector->SetMinFaceSize(40);
-        	detector->SetScoreThresh(2.f);
-        	detector->SetImagePyramidScaleFactor(0.8f);
-        	detector->SetWindowStep(4, 4);
-        }
-        if(face_recognizer==NULL)
-        {
-            face_recognizer=new FaceIdentification((char *)recognizer_path.c_str());
-        }
 
     	pthread_attr_init(&attr);
     	pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
@@ -251,13 +269,39 @@ int Face_Rec_Init(int ChannelNum,char *path)
 //  callback_function: Callback when complete detect
 
 //Return Value:
-//  0: Noraml, -1: Module Busy, -2: Thread Number exceed the max of thread
+//  0: Noraml, -1: Module Busy, -2: Thread Number exceed the max of thread, -3: Face Not Detected, -4: Input Paramater Null
 int Face_Rec_Extract(int ChannelID,ImageData img_data_color,ImageData img_data_gray,float* img_fea,Face_Rec_Extract_cb_t callback_function)
 {
     int ret=0;
+
+    if(ChannelID>=Face_Rec_ACT_NUM || ChannelID < 0) {
+        return -2;
+    }
+
+// TODO Param Judge
+//    if (img_data_color == NULL || !img_data_gray == NULL || img_fea == NULL) {
+//        return -4;
+//    }
+
+
+// single thread
+    if(Face_Rec_ACT_NUM == 1 && ChannelID == 0) {
+        
+        std::vector<seeta::FaceInfo> gallery_faces;
+        gallery_faces = detector->Detect(img_data_gray);
+        int32_t gallery_face_num = static_cast<int32_t>(gallery_faces.size());
+        if (gallery_face_num == 0) {
+            return -3;
+        }
+        seeta::FacialLandmark gallery_points[5];
+        point_detector->PointDetectLandmarks(img_data_gray, gallery_faces[0], gallery_points);   
+        face_recognizer->ExtractFeatureWithCrop(img_data_color, gallery_points, img_fea); 
+        return 0;
+    }
+
+// multi thread
     pthread_mutex_lock(&mutex);
-    if(ChannelID>=Face_Rec_ACT_NUM)
-        ret=-2;
+
     if((MAIN_ST[ChannelID].Step==FACE_REC_STEP_EXTR)||(MAIN_ST[ChannelID].Step==FACE_REC_STEP_DECT))
         ret=-1;
     if(ret==0)
@@ -279,10 +323,32 @@ int Face_Rec_Extract(int ChannelID,ImageData img_data_color,ImageData img_data_g
 //  img_data_gray: Gray Image,
 //  callback_function: Callback when complete detect
 //Return Value:
-//  0: Noraml, -1: Module Busy, -2: Thread Number exceed the max of thread
-int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gray,Face_Rec_Detect_cb_t callback_function)
+//  0: Noraml, -1: Module Busy, -2: Thread Number exceed the max of thread, -3: Input Param is Null
+int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gray,void * res_faces, Face_Rec_Detect_cb_t callback_function)
 {
     int ret=0;
+    if(ChannelID>=Face_Rec_ACT_NUM || ChannelID < 0) {
+        return -2;
+    }
+
+// TODO Param Judge
+//    if (img_data_color == NULL || !img_data_gray == NULL) {
+//        return -3;
+//    }
+
+
+//single thread
+
+    if(Face_Rec_ACT_NUM == 1 && ChannelID == 0) {
+
+        std::vector<seeta::FaceInfo> gallery_faces;
+        gallery_faces = detector->Detect(img_data_gray);
+        //TODO  copy gallery_faces to *res_faces;
+        return 0;
+    }
+
+//multi thread
+
     pthread_mutex_lock(&mutex);
     if(ChannelID>=Face_Rec_ACT_NUM)
         ret=-2;
@@ -321,20 +387,32 @@ float Face_Rec_Compare(float * img1_fea,float * img2_fea)
 //  0: Noraml
 int Face_Rec_Deinit()
 {
-    pthread_mutex_lock(&mutex);
-    memset(MAIN_ST,0,sizeof(MAIN_ST));
-    Face_Rec_ACT_NUM=0;
-    pthread_mutex_unlock(&mutex);
 
+    if (Face_Rec_ACT_NUM >1) {
+
+        pthread_mutex_lock(&mutex);
+        memset(MAIN_ST,0,sizeof(MAIN_ST));
+        Face_Rec_ACT_NUM=0;
+        pthread_mutex_unlock(&mutex);
+        
+        thread_run = 0;
+        pthread_join(thread, NULL);
+    } 
     
-    thread_run = 0;
-    pthread_join(thread, NULL);
-	delete point_detector;
-	point_detector=NULL;
-	delete detector;
-	detector=NULL;
-	delete face_recognizer;
-	face_recognizer=NULL;
+    if (point_detector != NULL) {
+	   delete point_detector;
+       point_detector=NULL;
+    }
+
+	if (detector != NULL) {
+	   delete detector;
+	   detector=NULL;
+    }
+
+    if (face_recognizer != NULL) {
+	   delete face_recognizer;
+	   face_recognizer=NULL;
+    }
 }
 
 Face_Rec_Step_EM Face_Rec_Current_Step(int ChannelID)
