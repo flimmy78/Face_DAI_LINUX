@@ -171,7 +171,7 @@ static void *timer_thread(void *arg)
 //  ChannelNum: the max of thread
 //  path: ANN binary path (can be omitted)
 //Return Value:
-//  0: Noraml Multithread,1: Normal Single Thread -1: Thread Create Failed, -2: Thread Number exceed the max of thread, -3: Double Initiate
+//  0: Noraml -1: Thread Create Failed, -2: Thread Number exceed the max of thread, -3: Double Initiate
 int Face_Rec_Init(int ChannelNum,char *path)
 {
     pthread_attr_t      attr;
@@ -320,7 +320,7 @@ int Face_Rec_Extract(int ChannelID,ImageData img_data_color,ImageData img_data_g
 //  img_data_gray: Gray Image,
 //  callback_function: Callback when complete detect
 //Return Value:
-//  0: Noraml, -1: Module Busy, -2: Thread Number exceed the max of thread, -3: Input Param is Null
+//  0: Noraml, -1: Module Busy, -2: Thread Number exceed the max of thread, -3: Face Not Detected, -4: Input Param is Null
 int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gray,void * res_faces, Face_Rec_Detect_cb_t callback_function)
 {
     int ret=0;
