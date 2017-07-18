@@ -321,7 +321,7 @@ int Face_Rec_Extract(int ChannelID,ImageData img_data_color,ImageData img_data_g
 //  callback_function: Callback when complete detect
 //Return Value:
 //  0: Noraml, -1: Module Busy, -2: Thread Number exceed the max of thread, -3: Face Not Detected, -4: Input Param is Null
-int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gray,void * res_faces, Face_Rec_Detect_cb_t callback_function)
+int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gray,vector<FaceInfo> & res_faces, Face_Rec_Detect_cb_t callback_function)
 {
     int ret=0;
     if(ChannelID>=Face_Rec_ACT_NUM || ChannelID < 0) {
@@ -338,8 +338,7 @@ int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gr
 		int32_t gallery_face_num = static_cast<int32_t>(gallery_faces.size());		
 		if(gallery_face_num >0)
         {
-			std::vector<FaceInfo>& result = *(std::vector<FaceInfo>*)res_faces;
-			result.insert(result.end(),gallery_faces.begin(),gallery_faces.end());
+			res_faces.insert(res_faces.end(),gallery_faces.begin(),gallery_faces.end());
 			return 0;
 		}
 		return -3;

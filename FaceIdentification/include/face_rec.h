@@ -7,6 +7,7 @@
 #include "math_functions.h"
 
 using namespace seeta;
+using namespace std;
 
 
 #define Face_Rec_Pthread_MAX_NUM    64
@@ -21,7 +22,7 @@ typedef enum { /* bitmapped status flags */
 } Face_Rec_Step_EM;
 
 int Face_Rec_Init(int ChannelNum,char *path = NULL);
-int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gray,void * res_faces, Face_Rec_Detect_cb_t callback_function);		
+int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gray,vector<FaceInfo> & res_faces, Face_Rec_Detect_cb_t callback_function);
 int Face_Rec_Extract(int ChannelID,ImageData img_data_color,ImageData img_data_gray,float* img_fea,Face_Rec_Extract_cb_t callback_function);			
 float Face_Rec_Compare(float * img1_fea,float * img2_fea);
 int Face_Rec_Deinit();
