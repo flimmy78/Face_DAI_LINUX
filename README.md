@@ -24,13 +24,13 @@ int Face_Rec_Extract(int ChannelID,ImageData img_data_color,ImageData img_data_g
 //  0: Noraml, -1: Module Busy, -2: Thread Number exceed the max of thread, -3: Face Not Detected, -4: Input Paramater Null
 
 
-
-int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gray,void * res_faces, Face_Rec_Detect_cb_t callback_function)
+int Face_Rec_Detect(int ChannelID,ImageData img_data_color,ImageData img_data_gray,vector<FaceInfo> & res_faces, Face_Rec_Detect_cb_t callback_function)
 //Function: Detect face from picture
 //Param : 
 //  ChannelID: ID of the thread,
 //  img_data_color: Original Image,
 //  img_data_gray: Gray Image,
+//  res_faces: detected faces
 //  callback_function: Callback when complete detect
 //Return Value:
 //  0: Noraml, -1: Module Busy, -2: Thread Number exceed the max of thread, -3: Face Not Detected, -4: Input Param is Null
