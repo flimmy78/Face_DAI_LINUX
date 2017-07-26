@@ -1,10 +1,10 @@
 #include "face_rec.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
+//#include <iostream>
+//#include <fstream>
+//#include <sstream>
 //#include <conio.h>
 
-#include "opencv2/core/version.hpp"
+//#include "opencv2/core/version.hpp"
 #include "opencv/cv.h"
 #include "opencv/highgui.h"
 
@@ -63,15 +63,15 @@ int main(int argc, char *argv[])
 
 	// Using FaceDAI Library
 
-	Face_Rec_Init(1);
+	Face_Rec_Init(NULL);
 	
-	Face_Rec_Extract(0,gallery_src_data_color,gallery_src_data_gray,gallery_fea,NULL);
-	Face_Rec_Extract(0,gallery_dst_data_color,gallery_dst_data_gray,probe_fea,NULL);
+	Face_Rec_Extract(gallery_src_data_color,gallery_src_data_gray,gallery_fea);
+	Face_Rec_Extract(gallery_dst_data_color,gallery_dst_data_gray,probe_fea);
 	ga_faces.clear();
-	Face_Rec_Detect(0,gallery_src_data_color,gallery_src_data_gray,ga_faces,NULL);
+	Face_Rec_Detect(gallery_src_data_color,gallery_src_data_gray,ga_faces);
 	std::cout << "picture 1 detect faces:"<<"face num:"<<ga_faces.size()<< endl;
 	ga_faces.clear();
-	Face_Rec_Detect(0,gallery_dst_data_color,gallery_dst_data_gray,ga_faces,NULL);
+	Face_Rec_Detect(gallery_dst_data_color,gallery_dst_data_gray,ga_faces);
 	std::cout << "picture 2 detect faces:"<<"face num:"<<ga_faces.size()<< endl;	
 	//Caculate Sim
 	float sim = Face_Rec_Compare(gallery_fea,probe_fea);
