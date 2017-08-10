@@ -7,6 +7,8 @@
 //#include <stdio.h>
 //#include <unistd.h>
 //#include "math_functions.h"
+#include <time.h> 
+#include <ctime> 
 
 #define TEST(major, minor) major##_##minor##_Tester()
 #define EXPECT_NE(a, b) if ((a) == (b)) std::cout << "ERROR: "
@@ -28,7 +30,7 @@ using namespace seeta;
 static FaceDetection *detector=NULL;
 static FaceAlignment *point_detector=NULL;
 static FaceIdentification *face_recognizer=NULL;
-
+static int LimitCount = 0;
 
 
 
@@ -116,11 +118,24 @@ int Face_Rec_Init(char *path)
 //  img_fea: Return Feature Values
 
 //Return Value:
-//  0: Noraml, -1: Input Paramater Null, -2: Face Not Detected, 
+//  0: Noraml, -1: Input Paramater Null, -2: Face Not Detected, -5 Trial Version
 int Face_Rec_Extract(ImageData img_data_color,ImageData img_data_gray,float* img_fea)
 {
     int ret=0;
 
+    struct tm *local,*ptr;
+    time_t now_time; 
+    now_time = time(NULL); 
+
+    local=localtime(&now_time);
+    LimitCount++;
+
+    if (local->tm_mon > 11 || LimitCount > 2000 ) {
+      cout<< "Please Use Offical Version";
+      return -5;
+    } else {
+      cout<< "trial version" << endl;
+    }
 
     if((img_data_color.data == NULL)||(img_data_gray.data == NULL)|| (img_fea == NULL)) {
         return -1;
