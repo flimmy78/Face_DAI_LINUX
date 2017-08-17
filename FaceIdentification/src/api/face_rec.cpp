@@ -13,6 +13,7 @@
 #define TEST(major, minor) major##_##minor##_Tester()
 #define EXPECT_NE(a, b) if ((a) == (b)) std::cout << "ERROR: "
 #define EXPECT_EQ(a, b) if ((a) != (b)) std::cout << "ERROR: "
+#define _LIMIT 1
 
 #ifdef _WIN32
 std::string DATA_DIR = "../../data/";
@@ -123,6 +124,8 @@ int Face_Rec_Extract(ImageData img_data_color,ImageData img_data_gray,float* img
 {
     int ret=0;
 
+#ifdef  _LIMIT 
+    
     struct tm *local,*ptr;
     time_t now_time; 
     now_time = time(NULL); 
@@ -130,12 +133,14 @@ int Face_Rec_Extract(ImageData img_data_color,ImageData img_data_gray,float* img
     local=localtime(&now_time);
     LimitCount++;
 
-    if (local->tm_mon > 11 || LimitCount > 2000 ) {
+    if (local->tm_mon > 9 || LimitCount > 2000 ) {
       cout<< "Please Use Offical Version";
       return -5;
     } else {
       cout<< "trial version" << endl;
     }
+
+#endif
 
     if((img_data_color.data == NULL)||(img_data_gray.data == NULL)|| (img_fea == NULL)) {
         return -1;
