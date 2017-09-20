@@ -198,10 +198,19 @@ int Face_Rec_Detect(ImageData img_data_color,ImageData img_data_gray,vector<Face
 float Face_Rec_Compare(float * img1_fea,float * img2_fea)
 {
     long dim=2048;
-    return simd(img1_fea, img2_fea, dim)      
-    /(sqrt(simd(img1_fea, img1_fea, dim))      
-    * sqrt(simd(img2_fea, img2_fea, dim))); 
+
+    float sqr_val1 = sqrt(simd(img1_fea, img1_fea, dim));
+    float sqr_val2 = sqrt(simd(img2_fea, img2_fea, dim));
+
+    if((sqr_val1 == 0) ||(sqr_val2 == 0)) {
+
+        return 0;        
+    } else {
+
+        return simd(img1_fea, img2_fea, dim)/(sqr_val1*sqr_val2); 
+    }
 }
+
 
 
 //Function: Deinitialize the face detection/recognize module
